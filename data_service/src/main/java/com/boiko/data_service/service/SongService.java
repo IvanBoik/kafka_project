@@ -126,4 +126,9 @@ public class SongService {
         }
         return songs;
     }
+
+    public Song findByID(Long songID) {
+        return songRepository.findPublishedById(songID)
+                .orElseThrow(() -> new RuntimeException("Song with id = %d doesn't exists".formatted(songID)));
+    }
 }

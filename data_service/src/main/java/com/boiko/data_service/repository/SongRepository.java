@@ -6,9 +6,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
+
 public interface SongRepository extends JpaRepository<Song, Long> {
     @Query(value = "select * from songs where is_published = true",
     countQuery = "select count(*) from songs where is_published = true",
     nativeQuery = true)
     Page<Song> findAllPublished(Pageable pageable);
+
+    Optional<Song> findPublishedById(Long id);
 }

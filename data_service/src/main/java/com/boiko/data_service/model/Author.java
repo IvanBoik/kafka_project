@@ -27,6 +27,8 @@ public class Author {
     @JoinColumn(name = "id_author", referencedColumnName = "id")
     private List<AuthorLink> links;
 
+    private long likes;
+
     public String getNickname() {
         return userdata.getNickname();
     }

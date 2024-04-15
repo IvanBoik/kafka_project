@@ -96,4 +96,9 @@ public class AlbumService {
         album.setPublished(true);
         return albumRepository.save(album);
     }
+
+    public Album findByID(Long albumID) {
+        return albumRepository.findPublishedById(albumID)
+                .orElseThrow(() -> new RuntimeException("Album with id = %d doesn't exists".formatted(albumID)));
+    }
 }

@@ -20,7 +20,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<?> findByID(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(userService.findByID(id));
+            return ResponseEntity.ok(userService.findUserByID(id));
         }
         catch (RuntimeException e) {
             logger.error(e.getMessage());
@@ -58,6 +58,39 @@ public class UserController {
             Author author = userService.becomeAuthor(id, request);
             logger.info("User %s become an author".formatted(author.getNickname()));
             return ResponseEntity.ok(author.getId());
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/like/song")
+    public ResponseEntity<?> toggleLikeSong(@RequestParam Long userID, @RequestParam Long songID) {
+        try {
+            return ResponseEntity.ok(userService.toggleLikeSong(userID, songID));
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/like/album")
+    public ResponseEntity<?> toggleLikeAlbum(@RequestParam Long userID, @RequestParam Long albumID) {
+        try {
+            return ResponseEntity.ok(userService.toggleLikeAlbum(userID, albumID));
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/like/author")
+    public ResponseEntity<?> toggleLikeAuthor(@RequestParam Long userID, @RequestParam Long authorID) {
+        try {
+            return ResponseEntity.ok(userService.toggleLikeAuthor(userID, authorID));
         }
         catch (RuntimeException e) {
             logger.error(e);
