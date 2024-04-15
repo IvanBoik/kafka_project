@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +27,7 @@ public class UserService {
     private final FileInfoService fileInfoService;
     private final AuthorLinkMapper linkMapper;
 
-    public User addUser(UserDTO userDTO) {
+    public User saveUser(UserDTO userDTO) {
         User user = User.builder()
                 .email(userDTO.email())
                 .password(userDTO.password())
@@ -61,5 +62,21 @@ public class UserService {
         author.setUserdata(user);
         author.setLinks(links);
         return authorRepository.save(author);
+    }
+
+    public Long signUp(UserDTO userDTO) {
+        boolean isExists = userRepository.existsByEmail(userDTO.email());
+        if (isExists) {
+            throw new RuntimeException("User with email = %s already exists".formatted(userDTO.email()));
+        }
+        return saveUser(userDTO).getId();
+    }
+
+    public Long logIn(String email, String password) {
+        Optional<User> optionalUser = userRepository.findByEmailAndPassword(email, password);
+        if (optionalUser.isEmpty()) {
+                throw new RuntimeException("Invalid email or password");
+        }
+        return optionalUser.get().getId();
     }
 }

@@ -28,9 +28,28 @@ public class UserController {
         }
     }
 
-    @PostMapping("/")
-    public ResponseEntity<?> addUser(@RequestBody UserDTO userDTO) {
-        return ResponseEntity.ok(userService.addUser(userDTO));
+    @PostMapping("/signup")
+    public ResponseEntity<?> signUp(@RequestBody UserDTO userDTO) {
+        try {
+            Long id = userService.signUp(userDTO);
+            logger.info("User with id = %d was registered".formatted(id));
+            return ResponseEntity.ok(id);
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> logIn(@RequestParam String email, @RequestParam String password) {
+        try {
+            return ResponseEntity.ok(userService.logIn(email, password));
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/{id}/become_author")
