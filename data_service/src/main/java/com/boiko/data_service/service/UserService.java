@@ -86,13 +86,13 @@ public class UserService {
         return optionalUser.get().getId();
     }
 
-    private <T> Long toggleLike(User user, T entity, long totalLikes, Supplier<List<T>> getEntities) {
-        if (getEntities.get().contains(entity)) {
-            getEntities.get().remove(entity);
+    private <T> Long toggleLike(User user, T entity, long totalLikes, List<T> entities) {
+        if (entities.contains(entity)) {
+            entities.remove(entity);
             totalLikes--;
         }
         else {
-            getEntities.get().add(entity);
+            entities.add(entity);
             totalLikes++;
         }
         userRepository.save(user);
@@ -103,20 +103,20 @@ public class UserService {
         User user = findUserByID(userID);
         Song song = songService.findByID(songID);
         long likes = song.getLikes();
-        return toggleLike(user, song, likes, user::getLikedSongs);
+        return toggleLike(user, song, likes, user.getLikedSongs());
     }
 
     public Long toggleLikeAlbum(Long userID, Long albumID) {
         User user = findUserByID(userID);
         Album album = albumService.findByID(albumID);
         long likes = album.getLikes();
-        return toggleLike(user, album, likes, user::getLikedAlbums);
+        return toggleLike(user, album, likes, user.getLikedAlbums());
     }
 
     public Long toggleLikeAuthor(Long userID, Long authorID) {
         User user = findUserByID(userID);
         Author author = findAuthorByID(authorID);
         long likes = author.getLikes();
-        return toggleLike(user, author, likes, user::getLikedAuthors);
+        return toggleLike(user, author, likes, user.getLikedAuthors());
     }
 }

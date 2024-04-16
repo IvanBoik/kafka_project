@@ -40,14 +40,14 @@ public class SongService {
         return songRepository.findAllPublished(pageParams);
     }
 
-    public Song uploadSong(Long[] authorsIDs, MultipartFile audio, MultipartFile picture, LocalDateTime dateOfPublication)
+    public Song uploadSongAtDate(Long[] authorsIDs, MultipartFile audio, MultipartFile picture, LocalDateTime dateOfPublication)
             throws IOException, UnsupportedAudioFileException {
         FileInfo audioInfo = fileInfoService.upload("audio", audio);
         FileInfo pictureInfo = fileInfoService.upload("picture", picture);
         long duration = calculateDuration(audio);
         String name = FilenameUtils.removeExtension(audio.getOriginalFilename());
         List<Author> authors = authorService.findAllByID(authorsIDs);
-        Song song = saveSong(audioInfo, pictureInfo, duration, name, authors, dateOfPublication);
+        Song song = saveSong(audioInfo, pictureInfo, duration, name, authors, dateOfPublication, false);
 
         Date convertedDate = Date.from(
                 dateOfPublication.atZone(ZoneId.systemDefault()).toInstant()
@@ -57,15 +57,35 @@ public class SongService {
             public void run() {
                 Song publishedSong = publicationSong(song);
 
-                logger.info("Song %s (id = \"%d\") published at %s".formatted(
-                        publishedSong.getName(),
-                        publishedSong.getId(),
-                        dateOfPublication
+                logger.info("Song %s (id = \"%d\") published".formatted(
+                        publishedSong.getName(), publishedSong.getId()
                 ));
             }
         }, convertedDate);
 
         return song;
+    }
+
+    public Song uploadSong(Long[] authorsIDs, MultipartFile audio, MultipartFile picture)
+            throws IOException, UnsupportedAudioFileException {
+        FileInfo audioInfo = fileInfoService.upload("audio", audio);
+        FileInfo pictureInfo = fileInfoService.upload("picture", picture);
+        long duration = calculateDuration(audio);
+        String name = FilenameUtils.removeExtension(audio.getOriginalFilename());
+        List<Author> authors = authorService.findAllByID(authorsIDs);
+        LocalDateTime dateTimeAdded = LocalDateTime.now();
+
+        Song song = Song.builder()
+                .audio(audioInfo)
+                .picture(pictureInfo)
+                .duration(duration)
+                .name(name)
+                .authors(authors)
+                .isPublished(true)
+                .dateAdded(dateTimeAdded.toLocalDate())
+                .timeAdded(dateTimeAdded.toLocalTime())
+                .build();
+        return songRepository.save(song);
     }
 
     private long calculateDuration(MultipartFile file) throws IOException, UnsupportedAudioFileException {
@@ -77,15 +97,15 @@ public class SongService {
         return (long) (frames / format.getFrameRate());
     }
 
-    private Song publicationSong(Song song) {
-        song.setPublished(true);
-        return songRepository.save(song);
-    }
-
     public List<Song> publicationSongs(List<Long> ids) {
         return songRepository.findAllById(ids).stream()
                 .map(this::publicationSong)
                 .toList();
+    }
+
+    private Song publicationSong(Song song) {
+        song.setPublished(true);
+        return songRepository.save(song);
     }
 
     private Song saveSong(
@@ -94,7 +114,8 @@ public class SongService {
             long duration,
             String name,
             List<Author> authors,
-            LocalDateTime dateTimeAdded
+            LocalDateTime dateTimeAdded,
+            boolean isPublished
     ) {
         Song song = Song.builder()
                 .authors(authors)
@@ -104,24 +125,28 @@ public class SongService {
                 .picture(picture)
                 .dateAdded(dateTimeAdded.toLocalDate())
                 .timeAdded(dateTimeAdded.toLocalTime())
-                .isPublished(false)
+                .isPublished(isPublished)
                 .build();
 
         return songRepository.save(song);
     }
 
-    public List<Song> uploadAlbumSongs(List<Author> authors, MultipartFile[] audios, MultipartFile picture)
-            throws IOException, UnsupportedAudioFileException {
+    public List<Song> uploadAlbumSongs(
+            List<Author> authors,
+            MultipartFile[] audios,
+            MultipartFile picture,
+            LocalDateTime dateOfPublication,
+            boolean isPublished
+    ) throws IOException, UnsupportedAudioFileException {
         List<Song> songs = new ArrayList<>();
         FileInfo pictureInfo = fileInfoService.upload("picture", picture);
-        LocalDateTime dateTimeAdded = LocalDateTime.now();
 
         for (MultipartFile audio : audios) {
             FileInfo audioInfo = fileInfoService.upload("audio", audio);
             long duration = calculateDuration(audio);
             String name = FilenameUtils.removeExtension(audio.getOriginalFilename());
             songs.add(
-                    saveSong(audioInfo, pictureInfo, duration, name, authors, dateTimeAdded)
+                    saveSong(audioInfo, pictureInfo, duration, name, authors, dateOfPublication, isPublished)
             );
         }
         return songs;

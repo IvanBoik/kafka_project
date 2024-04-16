@@ -37,7 +37,7 @@ public class AlbumService {
         return albumRepository.findAllPublished(pageParams);
     }
 
-    public void uploadAlbumAtDate(
+    public Album uploadAlbumAtDate(
             Long[] authorsIDs,
             String name,
             MultipartFile[] audios,
@@ -50,20 +50,39 @@ public class AlbumService {
         );
 
         List<Author> authors = authorService.findAllByID(authorsIDs);
-        List<Song> songs = songService.uploadAlbumSongs(authors, audios, picture);
+        List<Song> songs = songService.uploadAlbumSongs(authors, audios, picture, dateOfPublication, false);
         Album album = saveAlbum(authors, name, songs, dateOfPublication);
 
         timer.schedule(new TimerTask() {
             public void run() {
                 Album publishedAlbum = publicationAlbum(album);
 
-                logger.info("Album %s (id = \"%d\") published at %s".formatted(
+                logger.info("Album %s (id = \"%d\") published".formatted(
                         publishedAlbum.getName(),
-                        publishedAlbum.getId(),
-                        dateOfPublication
+                        publishedAlbum.getId()
                 ));
             }
         }, convertedDate);
+
+        return album;
+    }
+
+    public Album uploadAlbum(Long[] authorsIDs, String name, MultipartFile[] audios, MultipartFile picture)
+            throws UnsupportedAudioFileException, IOException {
+        List<Author> authors = authorService.findAllByID(authorsIDs);
+        LocalDateTime dateOfPublication = LocalDateTime.now();
+        List<Song> songs = songService.uploadAlbumSongs(authors, audios, picture, dateOfPublication, true);
+
+        Album album = Album.builder()
+                .name(name)
+                .songs(songs)
+                .picture(songs.get(0).getPicture())
+                .authors(authors)
+                .isPublished(true)
+                .dateAdded(dateOfPublication.toLocalDate())
+                .timeAdded(dateOfPublication.toLocalTime())
+                .build();
+        return albumRepository.save(album);
     }
 
     private Album saveAlbum(

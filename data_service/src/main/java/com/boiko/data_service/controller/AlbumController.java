@@ -1,5 +1,6 @@
 package com.boiko.data_service.controller;
 
+import com.boiko.data_service.model.Album;
 import com.boiko.data_service.service.AlbumService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
@@ -13,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/v1/albums")
@@ -22,8 +22,8 @@ public class AlbumController {
     private static final Logger logger = LogManager.getLogger(AlbumController.class);
     private final AlbumService albumService;
 
-    @PostMapping(value = "/", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<?> uploadAlbum(
+    @PostMapping(value = "/upload/at_date", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> uploadAlbumAtDate(
             @RequestParam("authorID") Long[] ids,
             @RequestParam("name") String name,
             @RequestParam("songs") MultipartFile[] audios,
@@ -31,11 +31,37 @@ public class AlbumController {
             @RequestParam("dateOfPublication") LocalDateTime dateOfPublication
     ) {
         try {
-            albumService.uploadAlbumAtDate(ids, name, audios, picture, dateOfPublication);
-            logger.info("Album with name = \"%s\" and authors ids = %s will be published at %s".formatted(
-                    name, Arrays.toString(ids), dateOfPublication
-            ));
-            return ResponseEntity.ok().body("Album uploaded");
+            Album album = albumService.uploadAlbumAtDate(ids, name, audios, picture, dateOfPublication);
+            String message = "Song %s with id = %d will be published at %s %s".formatted(
+                    album.getName(), album.getId(), album.getDateAdded(), album.getTimeAdded()
+            );
+            logger.info(message);
+            return ResponseEntity.ok().body(message);
+        }
+        catch (IOException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        catch (UnsupportedAudioFileException e) {
+            logger.error(e);
+            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> uploadAlbum(
+            @RequestParam("authorID") Long[] ids,
+            @RequestParam("name") String name,
+            @RequestParam("songs") MultipartFile[] audios,
+            @RequestParam("picture") MultipartFile picture
+    ) {
+        try {
+            Album album = albumService.uploadAlbum(ids, name, audios, picture);
+            String message = "Song %s with id = %d published".formatted(
+                    album.getName(), album.getId()
+            );
+            logger.info(message);
+            return ResponseEntity.ok().body(message);
         }
         catch (IOException e) {
             logger.error(e);
