@@ -1,17 +1,14 @@
 package com.boiko.api_service.service;
 
+import com.boiko.api_service.dto.SongDTO;
 import com.boiko.api_service.producer.SongProducer;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,22 +25,32 @@ public class SongService {
         );
     }
 
-    public ResponseEntity<?> uploadSong(
+    public void uploadSong(Long[] authorsIDs, MultipartFile audio, MultipartFile picture) throws IOException {
+        uploadSongAtDate(authorsIDs, audio, picture, null);
+    }
+
+    public void uploadSongAtDate(
             Long[] authorsIDs,
             MultipartFile audio,
             MultipartFile picture,
             LocalDateTime dateOfPublication
-    ) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("authorIDs", authorsIDs);
-        body.add("audio", audio);
-        body.add("picture", picture);
-        body.add("dateOfPublication", dateOfPublication);
+    ) throws IOException {
 
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+        String name = FilenameUtils.removeExtension(audio.getOriginalFilename());
+        byte[] audioBytes = audio.getBytes();
+        String audioType = audio.getContentType();
+        byte[] pictureBytes = picture.getBytes();
+        String pictureType = picture.getContentType();
 
-        return restTemplate.postForEntity("songs/upload", requestEntity, String.class);
+        SongDTO songDTO = new SongDTO(
+                authorsIDs,
+                name,
+                audioBytes,
+                audioType,
+                pictureBytes,
+                pictureType,
+                dateOfPublication
+        );
+        songProducer.sendSongForUpload(songDTO);
     }
 }

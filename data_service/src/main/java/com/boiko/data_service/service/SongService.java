@@ -1,5 +1,6 @@
 package com.boiko.data_service.service;
 
+import com.boiko.data_service.dto.SongDTO;
 import com.boiko.data_service.model.Author;
 import com.boiko.data_service.model.FileInfo;
 import com.boiko.data_service.model.Song;
@@ -20,6 +21,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -49,14 +51,31 @@ public class SongService {
         List<Author> authors = authorService.findAllByID(authorsIDs);
         Song song = saveSong(audioInfo, pictureInfo, duration, name, authors, dateOfPublication, false);
 
+        return makeTask(song, dateOfPublication);
+    }
+
+    public void uploadSongAtDate(SongDTO songDTO)
+            throws IOException, UnsupportedAudioFileException {
+        assert songDTO.dateOfPublication() != null;
+
+        FileInfo audioInfo = fileInfoService.upload("audio", songDTO.audio(), songDTO.audioType());
+        FileInfo pictureInfo = fileInfoService.upload("picture", songDTO.picture(), songDTO.pictureType());
+        long duration = calculateDuration(songDTO.audio());
+        List<Author> authors = authorService.findAllByID(songDTO.authorsIDs());
+        LocalDateTime dateOfPublication = songDTO.dateOfPublication();
+        Song song = saveSong(audioInfo, pictureInfo, duration, songDTO.name(), authors, dateOfPublication, false);
+
+        makeTask(song, dateOfPublication);
+    }
+
+    private Song makeTask(Song song, LocalDateTime dateTime) {
         Date convertedDate = Date.from(
-                dateOfPublication.atZone(ZoneId.systemDefault()).toInstant()
+                dateTime.atZone(ZoneId.systemDefault()).toInstant()
         );
 
         timer.schedule(new TimerTask() {
             public void run() {
                 Song publishedSong = publicationSong(song);
-
                 logger.info("Song %s (id = \"%d\") published".formatted(
                         publishedSong.getName(), publishedSong.getId()
                 ));
@@ -88,8 +107,37 @@ public class SongService {
         return songRepository.save(song);
     }
 
+    public void uploadSong(SongDTO songDTO) throws UnsupportedAudioFileException, IOException {
+        FileInfo audioInfo = fileInfoService.upload("audio", songDTO.audio(), songDTO.audioType());
+        FileInfo pictureInfo = fileInfoService.upload("picture", songDTO.picture(), songDTO.pictureType());
+        long duration = calculateDuration(songDTO.audio());
+        List<Author> authors = authorService.findAllByID(songDTO.authorsIDs());
+        LocalDateTime dateTimeAdded = LocalDateTime.now();
+
+        Song song = Song.builder()
+                .audio(audioInfo)
+                .picture(pictureInfo)
+                .duration(duration)
+                .name(songDTO.name())
+                .authors(authors)
+                .isPublished(true)
+                .dateAdded(dateTimeAdded.toLocalDate())
+                .timeAdded(dateTimeAdded.toLocalTime())
+                .build();
+        songRepository.save(song);
+    }
+
     private long calculateDuration(MultipartFile file) throws IOException, UnsupportedAudioFileException {
         InputStream stream = file.getInputStream();
+        InputStream bufferedIn = new BufferedInputStream(stream);
+        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(bufferedIn);
+        AudioFormat format = audioInputStream.getFormat();
+        long frames = audioInputStream.getFrameLength();
+        return (long) (frames / format.getFrameRate());
+    }
+
+    private long calculateDuration(byte[] data) throws IOException, UnsupportedAudioFileException {
+        InputStream stream = new ByteArrayInputStream(data);
         InputStream bufferedIn = new BufferedInputStream(stream);
         AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(bufferedIn);
         AudioFormat format = audioInputStream.getFormat();

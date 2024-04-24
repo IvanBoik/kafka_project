@@ -2,7 +2,7 @@ package com.boiko.api_service.aop;
 
 
 import com.boiko.api_service.aop.annotations.ValidTypes;
-import com.boiko.exception.InvalidFileTypeException;
+import com.boiko.api_service.exception.InvalidFileTypeException;
 import org.apache.commons.io.FilenameUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;

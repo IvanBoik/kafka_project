@@ -28,9 +28,24 @@ public class FileInfoService {
         return saveFileInfo(fileInfo);
     }
 
+    public FileInfo upload(String bucket, byte[] data, String fileType) {
+        FileInfo fileInfo = createFileInfo(fileType);
+        String key = s3Service.generateKey();
+        String url = s3Service.uploadAndGetURL(bucket, key, data);
+        fileInfo.setS3Key(key);
+        fileInfo.setUrl(url);
+        return saveFileInfo(fileInfo);
+    }
+
     public FileInfo createFileInfo(MultipartFile file) {
         FileInfo fileInfo = new FileInfo();
         fileInfo.setType(file.getContentType());
+        return fileInfo;
+    }
+
+    public FileInfo createFileInfo(String fileType) {
+        FileInfo fileInfo = new FileInfo();
+        fileInfo.setType(fileType);
         return fileInfo;
     }
 

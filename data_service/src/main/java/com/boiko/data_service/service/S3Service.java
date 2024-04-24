@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.UUID;
 
@@ -23,10 +25,22 @@ public class S3Service {
         return getURL(bucket, key);
     }
 
+    public String uploadAndGetURL(String bucket, String key, byte[] data) {
+        upload(bucket, key, data);
+        return getURL(bucket, key);
+    }
+
     public void upload(String bucket, String key, MultipartFile file) throws IOException {
         String path = makePath(bucket);
         amazonS3.putObject(
                 new PutObjectRequest(path, key, file.getInputStream(), new ObjectMetadata())
+        );
+    }
+
+    public void upload(String bucket, String key, byte[] data) {
+        String path = makePath(bucket);
+        amazonS3.putObject(
+                new PutObjectRequest(path, key, new ByteArrayInputStream(data), new ObjectMetadata())
         );
     }
 
