@@ -25,12 +25,9 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic songsTopic() {
-        Map<String, String> configs = new HashMap<>();
-        configs.put("max.message.bytes", "41943040");
         return TopicBuilder
                 .name("songsTopic")
                 .partitions(1)
-                .configs(configs)
                 .build();
     }
 
