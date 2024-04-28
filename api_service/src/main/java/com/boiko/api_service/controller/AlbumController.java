@@ -1,17 +1,14 @@
-package com.boiko.data_service.controller;
+package com.boiko.api_service.controller;
 
-import com.boiko.data_service.model.Album;
-import com.boiko.data_service.service.AlbumService;
+import com.boiko.api_service.service.AlbumService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
@@ -24,56 +21,42 @@ public class AlbumController {
 
     @PostMapping(value = "/upload/at_date", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> uploadAlbumAtDate(
-            @RequestParam("authorID") Long[] ids,
+            @RequestParam("authorIDs") Long[] ids,
             @RequestParam("name") String name,
-            @RequestParam("songs") MultipartFile[] audios,
+            @RequestParam("audios") MultipartFile[] audios,
+            @RequestParam("songsAuthorsIDs") Long[][] songsAuthorsIDs,
             @RequestParam("picture") MultipartFile picture,
             @RequestParam("dateOfPublication") LocalDateTime dateOfPublication
     ) {
         try {
-            Album album = albumService.uploadAlbumAtDate(ids, name, audios, picture, dateOfPublication);
-            String message = "Song %s with id = %d will be published at %s %s".formatted(
-                    album.getName(), album.getId(), album.getDateAdded(), album.getTimeAdded()
-            );
-            logger.info(message);
-            return ResponseEntity.ok().body(message);
+            albumService.uploadAlbumAtDate(ids, songsAuthorsIDs, name, audios, picture, dateOfPublication);
+            return ResponseEntity.ok().body("OK");
         }
         catch (IOException e) {
             logger.error(e);
             return ResponseEntity.badRequest().body(e.getMessage());
-        }
-        catch (UnsupportedAudioFileException e) {
-            logger.error(e);
-            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(e.getMessage());
         }
     }
 
     @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<?> uploadAlbum(
-            @RequestParam("authorID") Long[] ids,
+            @RequestParam("authorIDs") Long[] ids,
             @RequestParam("name") String name,
-            @RequestParam("songs") MultipartFile[] audios,
+            @RequestParam("audios") MultipartFile[] audios,
+            @RequestParam("songsAuthorsIDs") Long[][] songsAuthorsIDs,
             @RequestParam("picture") MultipartFile picture
     ) {
         try {
-            Album album = albumService.uploadAlbum(ids, name, audios, picture);
-            String message = "Song %s with id = %d published".formatted(
-                    album.getName(), album.getId()
-            );
-            logger.info(message);
-            return ResponseEntity.ok().body(message);
+            albumService.uploadAlbum(ids, songsAuthorsIDs, name, audios, picture);
+            return ResponseEntity.ok().body("OK");
         }
         catch (IOException e) {
             logger.error(e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
-        catch (UnsupportedAudioFileException e) {
-            logger.error(e);
-            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(e.getMessage());
-        }
     }
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<?> topAlbums(
             @RequestParam(value = "page_size", defaultValue = "10") int pageSize,
             @RequestParam("page_number") int pageNumber

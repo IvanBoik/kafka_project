@@ -40,6 +40,7 @@ public class Song {
     private LocalTime timeAdded;
     private long likes;
     private boolean isPublished;
+    private long auditions;
 
     public String toString() {
         String res = "{\n";

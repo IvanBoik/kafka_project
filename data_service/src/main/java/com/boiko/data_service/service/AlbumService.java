@@ -1,7 +1,9 @@
 package com.boiko.data_service.service;
 
+import com.boiko.data_service.dto.AlbumDTO;
 import com.boiko.data_service.model.Album;
 import com.boiko.data_service.model.Author;
+import com.boiko.data_service.model.FileInfo;
 import com.boiko.data_service.model.Song;
 import com.boiko.data_service.repository.AlbumRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class AlbumService {
     private final AlbumRepository albumRepository;
     private final AuthorService authorService;
     private final SongService songService;
+    private final FileInfoService fileInfoService;
     private final Timer timer = new Timer("albumTimer");
 
     public Page<Album> getTopAlbums(int pageSize, int pageNumber) {
@@ -45,13 +48,17 @@ public class AlbumService {
             LocalDateTime dateOfPublication
     ) throws UnsupportedAudioFileException, IOException {
 
-        Date convertedDate = Date.from(
-                dateOfPublication.atZone(ZoneId.systemDefault()).toInstant()
-        );
-
         List<Author> authors = authorService.findAllByID(authorsIDs);
         List<Song> songs = songService.uploadAlbumSongs(authors, audios, picture, dateOfPublication, false);
         Album album = saveAlbum(authors, name, songs, dateOfPublication);
+
+        return makeTask(album, dateOfPublication);
+    }
+
+    private Album makeTask(Album album, LocalDateTime dateTime) {
+        Date convertedDate = Date.from(
+                dateTime.atZone(ZoneId.systemDefault()).toInstant()
+        );
 
         timer.schedule(new TimerTask() {
             public void run() {
@@ -104,12 +111,12 @@ public class AlbumService {
     }
 
     private Album publicationAlbum(Album album) {
-        List<Long> tempsIDs = album
+        List<Long> songsIDs = album
                 .getSongs()
                 .stream()
                 .map(Song::getId)
                 .toList();
-        List<Song> songs = songService.publicationSongs(tempsIDs);
+        List<Song> songs = songService.publicationSongs(songsIDs);
 
         album.setSongs(songs);
         album.setPublished(true);
@@ -119,5 +126,38 @@ public class AlbumService {
     public Album findByID(Long albumID) {
         return albumRepository.findPublishedById(albumID)
                 .orElseThrow(() -> new RuntimeException("Album with id = %d doesn't exists".formatted(albumID)));
+    }
+
+    public void uploadAlbum(AlbumDTO albumDTO) throws UnsupportedAudioFileException, IOException {
+        List<Author> authors = authorService.findAllByID(albumDTO.authorsIDs());
+        LocalDateTime dateOfPublication = LocalDateTime.now();
+        FileInfo pictureInfo = fileInfoService.upload("picture", albumDTO.picture(), albumDTO.pictureType());
+        List<Song> songs = songService.uploadAlbumSongs(
+                albumDTO.songs(), pictureInfo, authors, dateOfPublication, true
+        );
+
+        Album album = Album.builder()
+                .name(albumDTO.name())
+                .songs(songs)
+                .picture(pictureInfo)
+                .authors(authors)
+                .isPublished(true)
+                .dateAdded(dateOfPublication.toLocalDate())
+                .timeAdded(dateOfPublication.toLocalTime())
+                .build();
+        albumRepository.save(album);
+    }
+
+    public void uploadAlbumAtDate(AlbumDTO albumDTO) throws UnsupportedAudioFileException, IOException {
+        assert albumDTO.dateOfPublication() != null;
+
+        List<Author> authors = authorService.findAllByID(albumDTO.authorsIDs());
+        FileInfo pictureInfo = fileInfoService.upload("picture", albumDTO.picture(), albumDTO.pictureType());
+        List<Song> songs = songService.uploadAlbumSongs(
+                albumDTO.songs(), pictureInfo, authors, albumDTO.dateOfPublication(), false
+        );
+        Album album = saveAlbum(authors, albumDTO.name(), songs, albumDTO.dateOfPublication());
+
+        makeTask(album, albumDTO.dateOfPublication());
     }
 }

@@ -1,7 +1,7 @@
 package com.boiko.data_service.consumer;
 
-import com.boiko.data_service.dto.SongDTO;
-import com.boiko.data_service.service.SongService;
+import com.boiko.data_service.dto.AlbumDTO;
+import com.boiko.data_service.service.AlbumService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -12,19 +12,19 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class SongsConsumer {
-    private final SongService songService;
+public class AlbumConsumer {
+    private final AlbumService albumService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "songsTopic", groupId = "soundvibe")
+    @KafkaListener(topics = "albumsTopic", groupId = "soundvibe")
     void songsListener(String json) throws IOException, UnsupportedAudioFileException {
-        SongDTO song = objectMapper.readValue(json, SongDTO.class);
-        if (song.dateOfPublication() == null) {
-            songService.uploadSong(song);
+        AlbumDTO album = objectMapper.readValue(json, AlbumDTO.class);
+        if (album.dateOfPublication() == null) {
+            albumService.uploadAlbum(album);
         }
         else {
-            songService.uploadSongAtDate(song);
+            albumService.uploadAlbumAtDate(album);
         }
-        System.out.println(song);
+        System.out.println(album);
     }
 }

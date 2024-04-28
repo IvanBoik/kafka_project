@@ -71,7 +71,7 @@ public class SongController {
         }
     }
 
-    @GetMapping(value = "/")
+    @GetMapping
     public ResponseEntity<?> topSongs(
             @RequestParam(value = "page_size", defaultValue = "10") int pageSize,
             @RequestParam("page_number") int pageNumber

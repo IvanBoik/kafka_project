@@ -15,4 +15,9 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     Page<Album> findAllPublished(Pageable pageable);
 
     Optional<Album> findPublishedById(Long id);
+
+    @Query(value = """
+    update Album set auditions=auditions+1 where id=:id
+    """)
+    void incrementAuditions(Long id);
 }

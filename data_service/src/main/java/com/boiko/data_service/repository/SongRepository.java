@@ -15,4 +15,9 @@ public interface SongRepository extends JpaRepository<Song, Long> {
     Page<Song> findAllPublished(Pageable pageable);
 
     Optional<Song> findPublishedById(Long id);
+
+    @Query(value = """
+    update Song set auditions=auditions+1 where id=:id
+    """)
+    void incrementAuditions(Long id);
 }

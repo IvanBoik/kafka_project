@@ -43,4 +43,5 @@ public class Album {
     private LocalTime timeAdded;
     private long likes;
     private boolean isPublished;
+    private long auditions;
 }

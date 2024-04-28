@@ -1,6 +1,7 @@
 package com.boiko.data_service.service;
 
 import com.boiko.data_service.dto.SongDTO;
+import com.boiko.data_service.dto.SongInAlbumDTO;
 import com.boiko.data_service.model.Author;
 import com.boiko.data_service.model.FileInfo;
 import com.boiko.data_service.model.Song;
@@ -203,5 +204,28 @@ public class SongService {
     public Song findByID(Long songID) {
         return songRepository.findPublishedById(songID)
                 .orElseThrow(() -> new RuntimeException("Song with id = %d doesn't exists".formatted(songID)));
+    }
+
+    public List<Song> uploadAlbumSongs(
+            List<SongInAlbumDTO> songsDTOs,
+            FileInfo pictureInfo,
+            List<Author> albumAuthors,
+            LocalDateTime dateOfPublication,
+            boolean isPublished
+    ) throws UnsupportedAudioFileException, IOException {
+
+        List<Song> songs = new ArrayList<>();
+        for (SongInAlbumDTO dto : songsDTOs) {
+            List<Author> authors = albumAuthors;
+            if (albumAuthors.size() != dto.authorsIDs().length) {
+                authors = authorService.findAllByID(dto.authorsIDs());
+            }
+            FileInfo audioInfo = fileInfoService.upload("audio", dto.audio(), dto.audioType());
+            long duration = calculateDuration(dto.audio());
+            songs.add(
+                    saveSong(audioInfo, pictureInfo, duration, dto.name(), authors, dateOfPublication, isPublished)
+            );
+        }
+        return songs;
     }
 }

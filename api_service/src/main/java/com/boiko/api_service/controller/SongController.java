@@ -31,6 +31,7 @@ public class SongController {
             return ResponseEntity.ok("OK");
         }
         catch (IOException e) {
+            logger.error(e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -46,6 +47,7 @@ public class SongController {
             return ResponseEntity.ok("OK");
         }
         catch (IOException e) {
+            logger.error(e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
