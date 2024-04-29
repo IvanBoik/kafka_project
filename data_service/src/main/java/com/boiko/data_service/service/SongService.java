@@ -1,7 +1,9 @@
 package com.boiko.data_service.service;
 
 import com.boiko.data_service.dto.SongDTO;
-import com.boiko.data_service.dto.SongInAlbumDTO;
+import com.boiko.data_service.dto.SongInUploadAlbumDTO;
+import com.boiko.data_service.dto.UploadSongDTO;
+import com.boiko.data_service.mapper.SongMapper;
 import com.boiko.data_service.model.Author;
 import com.boiko.data_service.model.FileInfo;
 import com.boiko.data_service.model.Song;
@@ -10,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -25,6 +26,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -36,11 +38,15 @@ public class SongService {
     private final SongRepository songRepository;
     private final FileInfoService fileInfoService;
     private final AuthorService authorService;
+    private final SongMapper songMapper;
     private final Timer timer = new Timer("songTimer");
 
-    public Page<Song> getTopSongs(int pageSize, int pageNumber) {
+    public List<SongDTO> getTopSongs(int pageSize, int pageNumber) {
         Pageable pageParams = PageRequest.of(pageNumber, pageSize, Sort.by("likes").descending());
-        return songRepository.findAllPublished(pageParams);
+        return songRepository
+                .findAllPublished(pageParams)
+                .map(songMapper::modelToDTO)
+                .toList();
     }
 
     public Song uploadSongAtDate(Long[] authorsIDs, MultipartFile audio, MultipartFile picture, LocalDateTime dateOfPublication)
@@ -55,7 +61,7 @@ public class SongService {
         return makeTask(song, dateOfPublication);
     }
 
-    public void uploadSongAtDate(SongDTO songDTO)
+    public void uploadSongAtDate(UploadSongDTO songDTO)
             throws IOException, UnsupportedAudioFileException {
         assert songDTO.dateOfPublication() != null;
 
@@ -102,13 +108,12 @@ public class SongService {
                 .name(name)
                 .authors(authors)
                 .isPublished(true)
-                .dateAdded(dateTimeAdded.toLocalDate())
-                .timeAdded(dateTimeAdded.toLocalTime())
+                .timestampAdded(Timestamp.valueOf(dateTimeAdded))
                 .build();
         return songRepository.save(song);
     }
 
-    public void uploadSong(SongDTO songDTO) throws UnsupportedAudioFileException, IOException {
+    public void uploadSong(UploadSongDTO songDTO) throws UnsupportedAudioFileException, IOException {
         FileInfo audioInfo = fileInfoService.upload("audio", songDTO.audio(), songDTO.audioType());
         FileInfo pictureInfo = fileInfoService.upload("picture", songDTO.picture(), songDTO.pictureType());
         long duration = calculateDuration(songDTO.audio());
@@ -122,8 +127,7 @@ public class SongService {
                 .name(songDTO.name())
                 .authors(authors)
                 .isPublished(true)
-                .dateAdded(dateTimeAdded.toLocalDate())
-                .timeAdded(dateTimeAdded.toLocalTime())
+                .timestampAdded(Timestamp.valueOf(dateTimeAdded))
                 .build();
         songRepository.save(song);
     }
@@ -172,8 +176,7 @@ public class SongService {
                 .duration(duration)
                 .audio(audio)
                 .picture(picture)
-                .dateAdded(dateTimeAdded.toLocalDate())
-                .timeAdded(dateTimeAdded.toLocalTime())
+                .timestampAdded(Timestamp.valueOf(dateTimeAdded))
                 .isPublished(isPublished)
                 .build();
 
@@ -207,7 +210,7 @@ public class SongService {
     }
 
     public List<Song> uploadAlbumSongs(
-            List<SongInAlbumDTO> songsDTOs,
+            List<SongInUploadAlbumDTO> songsDTOs,
             FileInfo pictureInfo,
             List<Author> albumAuthors,
             LocalDateTime dateOfPublication,
@@ -215,7 +218,7 @@ public class SongService {
     ) throws UnsupportedAudioFileException, IOException {
 
         List<Song> songs = new ArrayList<>();
-        for (SongInAlbumDTO dto : songsDTOs) {
+        for (SongInUploadAlbumDTO dto : songsDTOs) {
             List<Author> authors = albumAuthors;
             if (albumAuthors.size() != dto.authorsIDs().length) {
                 authors = authorService.findAllByID(dto.authorsIDs());

@@ -1,6 +1,6 @@
-package com.boiko.api_service.dto;
+package com.boiko.data_service.dto;
 
-public record SongInAlbumDTO(
+public record SongInUploadAlbumDTO(
         Long[] authorsIDs,
         String name,
         int order,

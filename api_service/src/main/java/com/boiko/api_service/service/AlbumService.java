@@ -1,7 +1,8 @@
 package com.boiko.api_service.service;
 
 import com.boiko.api_service.dto.AlbumDTO;
-import com.boiko.api_service.dto.SongInAlbumDTO;
+import com.boiko.api_service.dto.SongInUploadAlbumDTO;
+import com.boiko.api_service.dto.UploadAlbumDTO;
 import com.boiko.api_service.producer.AlbumProducer;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
@@ -20,10 +21,11 @@ public class AlbumService {
     private final RestTemplate restTemplate;
     private final AlbumProducer albumProducer;
 
-    public List<?> getTopAlbums(int pageSize, int pageNumber) {
+    public AlbumDTO[] getTopAlbums(int pageSize, int pageNumber) {
+
         return restTemplate.getForObject(
-                "albums?page_size=%d&page_number=%d".formatted(pageSize, pageNumber),
-                List.class
+                "/albums?page_size=%s&page_number=%s".formatted(pageSize, pageNumber),
+                AlbumDTO[].class
         );
     }
 
@@ -40,17 +42,17 @@ public class AlbumService {
             LocalDateTime dateOfPublication
     ) throws IOException {
 
-        List<SongInAlbumDTO> songs = new ArrayList<>();
+        List<SongInUploadAlbumDTO> songs = new ArrayList<>();
         for (int i=0; i<audios.length; i++) {
             String songName = FilenameUtils.removeExtension(audios[i].getOriginalFilename());
             byte[] data = audios[i].getBytes();
             String audioType = audios[i].getContentType();
-            SongInAlbumDTO song = new SongInAlbumDTO(songsAuthorsIDs[i], songName, i, data, audioType);
+            SongInUploadAlbumDTO song = new SongInUploadAlbumDTO(songsAuthorsIDs[i], songName, i, data, audioType);
             songs.add(song);
         }
         byte[] pictureData = picture.getBytes();
         String pictureType = picture.getContentType();
-        AlbumDTO album = new AlbumDTO(name, songs, ids, pictureData, pictureType, dateOfPublication);
+        UploadAlbumDTO album = new UploadAlbumDTO(name, songs, ids, pictureData, pictureType, dateOfPublication);
         albumProducer.sendAlbumForUpload(album);
     }
 }

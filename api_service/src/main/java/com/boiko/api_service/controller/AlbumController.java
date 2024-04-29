@@ -56,7 +56,7 @@ public class AlbumController {
         }
     }
 
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<?> topAlbums(
             @RequestParam(value = "page_size", defaultValue = "10") int pageSize,
             @RequestParam("page_number") int pageNumber

@@ -3,8 +3,8 @@ package com.boiko.data_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 
@@ -49,6 +49,5 @@ public class User {
     private String password;
     private String nickname;
     private LocalDate birthday;
-    private LocalDate dateRegistered;
-    private LocalTime timeRegistered;
+    private Timestamp timestampRegistered;
 }

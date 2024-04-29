@@ -10,12 +10,11 @@ import com.boiko.data_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -35,8 +34,7 @@ public class UserService {
                 .nickname(userDTO.nickname())
                 .birthday(userDTO.birthday())
                 .avatar(fileInfoService.getDefaultAvatar())
-                .dateRegistered(LocalDate.now())
-                .timeRegistered(LocalTime.now())
+                .timestampRegistered(Timestamp.valueOf(LocalDateTime.now()))
                 .build();
         return userRepository.save(user);
     }

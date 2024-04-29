@@ -1,6 +1,7 @@
 package com.boiko.api_service.service;
 
 import com.boiko.api_service.dto.SongDTO;
+import com.boiko.api_service.dto.UploadSongDTO;
 import com.boiko.api_service.producer.SongProducer;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
@@ -10,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,10 +18,10 @@ public class SongService {
     private final RestTemplate restTemplate;
     private final SongProducer songProducer;
 
-    public List<?> getTopSongs(int pageSize, int pageNumber) {
+    public SongDTO[] getTopSongs(int pageSize, int pageNumber) {
         return restTemplate.getForObject(
-                "songs?page_size=%d&page_number=%d".formatted(pageSize, pageNumber),
-                List.class
+                "/songs?page_size=%d&page_number=%d".formatted(pageSize, pageNumber),
+                SongDTO[].class
         );
     }
 
@@ -42,7 +42,7 @@ public class SongService {
         byte[] pictureBytes = picture.getBytes();
         String pictureType = picture.getContentType();
 
-        SongDTO songDTO = new SongDTO(
+        UploadSongDTO songDTO = new UploadSongDTO(
                 authorsIDs,
                 name,
                 audioBytes,

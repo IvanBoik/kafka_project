@@ -3,8 +3,7 @@ package com.boiko.data_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.sql.Timestamp;
 import java.util.List;
 
 @Entity
@@ -39,8 +38,7 @@ public class Album {
     private List<Song> songs;
 
     private String name;
-    private LocalDate dateAdded;
-    private LocalTime timeAdded;
+    private Timestamp timestampAdded;
     private long likes;
     private boolean isPublished;
     private long auditions;

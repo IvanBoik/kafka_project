@@ -1,6 +1,8 @@
 package com.boiko.data_service.service;
 
 import com.boiko.data_service.dto.AlbumDTO;
+import com.boiko.data_service.dto.UploadAlbumDTO;
+import com.boiko.data_service.mapper.AlbumMapper;
 import com.boiko.data_service.model.Album;
 import com.boiko.data_service.model.Author;
 import com.boiko.data_service.model.FileInfo;
@@ -9,7 +11,6 @@ import com.boiko.data_service.repository.AlbumRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -18,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -33,11 +35,15 @@ public class AlbumService {
     private final AuthorService authorService;
     private final SongService songService;
     private final FileInfoService fileInfoService;
+    private final AlbumMapper albumMapper;
     private final Timer timer = new Timer("albumTimer");
 
-    public Page<Album> getTopAlbums(int pageSize, int pageNumber) {
+    public List<AlbumDTO> getTopAlbums(int pageSize, int pageNumber) {
         Pageable pageParams = PageRequest.of(pageNumber, pageSize, Sort.by("likes").descending());
-        return albumRepository.findAllPublished(pageParams);
+        return albumRepository
+                .findAllPublished(pageParams)
+                .map(albumMapper::modelToDTO)
+                .toList();
     }
 
     public Album uploadAlbumAtDate(
@@ -86,8 +92,7 @@ public class AlbumService {
                 .picture(songs.get(0).getPicture())
                 .authors(authors)
                 .isPublished(true)
-                .dateAdded(dateOfPublication.toLocalDate())
-                .timeAdded(dateOfPublication.toLocalTime())
+                .timestampAdded(Timestamp.valueOf(dateOfPublication))
                 .build();
         return albumRepository.save(album);
     }
@@ -103,8 +108,7 @@ public class AlbumService {
                 .songs(songs)
                 .name(name)
                 .picture(songs.get(0).getPicture())
-                .dateAdded(dateOfPublication.toLocalDate())
-                .timeAdded(dateOfPublication.toLocalTime())
+                .timestampAdded(Timestamp.valueOf(dateOfPublication))
                 .isPublished(false)
                 .build();
         return albumRepository.save(album);
@@ -128,7 +132,7 @@ public class AlbumService {
                 .orElseThrow(() -> new RuntimeException("Album with id = %d doesn't exists".formatted(albumID)));
     }
 
-    public void uploadAlbum(AlbumDTO albumDTO) throws UnsupportedAudioFileException, IOException {
+    public void uploadAlbum(UploadAlbumDTO albumDTO) throws UnsupportedAudioFileException, IOException {
         List<Author> authors = authorService.findAllByID(albumDTO.authorsIDs());
         LocalDateTime dateOfPublication = LocalDateTime.now();
         FileInfo pictureInfo = fileInfoService.upload("picture", albumDTO.picture(), albumDTO.pictureType());
@@ -142,13 +146,12 @@ public class AlbumService {
                 .picture(pictureInfo)
                 .authors(authors)
                 .isPublished(true)
-                .dateAdded(dateOfPublication.toLocalDate())
-                .timeAdded(dateOfPublication.toLocalTime())
+                .timestampAdded(Timestamp.valueOf(dateOfPublication))
                 .build();
         albumRepository.save(album);
     }
 
-    public void uploadAlbumAtDate(AlbumDTO albumDTO) throws UnsupportedAudioFileException, IOException {
+    public void uploadAlbumAtDate(UploadAlbumDTO albumDTO) throws UnsupportedAudioFileException, IOException {
         assert albumDTO.dateOfPublication() != null;
 
         List<Author> authors = authorService.findAllByID(albumDTO.authorsIDs());

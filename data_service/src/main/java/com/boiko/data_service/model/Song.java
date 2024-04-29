@@ -3,8 +3,7 @@ package com.boiko.data_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.sql.Timestamp;
 import java.util.List;
 
 @Entity
@@ -36,8 +35,7 @@ public class Song {
 
     private String name;
     private long duration;
-    private LocalDate dateAdded;
-    private LocalTime timeAdded;
+    private Timestamp timestampAdded;
     private long likes;
     private boolean isPublished;
     private long auditions;
@@ -50,8 +48,7 @@ public class Song {
         res += "\tname = %s,\n".formatted(name);
         res += "\tduration = %d,\n".formatted(duration);
         res += "\tauditions = %d,\n".formatted(likes);
-        res += "\tdateAdded = %s,\n".formatted(dateAdded);
-        res += "\ttimeAdded = %s,\n".formatted(timeAdded);
+        res += "\ttimestampAdded = %s,\n".formatted(timestampAdded);
         return res;
     }
 }

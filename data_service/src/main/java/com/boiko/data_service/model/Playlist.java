@@ -3,6 +3,7 @@ package com.boiko.data_service.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -27,6 +28,5 @@ public class Playlist {
 
     private String name;
     private boolean isPublic;
-    private LocalDate dateCreated;
-    private LocalTime timeCreated;
+    private Timestamp timestampCreated;
 }

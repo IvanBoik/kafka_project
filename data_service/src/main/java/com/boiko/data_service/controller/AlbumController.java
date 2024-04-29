@@ -32,8 +32,11 @@ public class AlbumController {
     ) {
         try {
             Album album = albumService.uploadAlbumAtDate(ids, name, audios, picture, dateOfPublication);
-            String message = "Song %s with id = %d will be published at %s %s".formatted(
-                    album.getName(), album.getId(), album.getDateAdded(), album.getTimeAdded()
+//            String message = "Song %s with id = %d will be published at %s %s".formatted(
+//                    album.getName(), album.getId(), album.getDateAdded(), album.getTimeAdded()
+//            );
+            String message = "Song %s with id = %d will be published at %s".formatted(
+                    album.getName(), album.getId(), album.getTimestampAdded()
             );
             logger.info(message);
             return ResponseEntity.ok().body(message);

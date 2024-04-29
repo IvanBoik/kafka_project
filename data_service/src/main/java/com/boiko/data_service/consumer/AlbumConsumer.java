@@ -1,6 +1,6 @@
 package com.boiko.data_service.consumer;
 
-import com.boiko.data_service.dto.AlbumDTO;
+import com.boiko.data_service.dto.UploadAlbumDTO;
 import com.boiko.data_service.service.AlbumService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class AlbumConsumer {
 
     @KafkaListener(topics = "albumsTopic", groupId = "soundvibe")
     void songsListener(String json) throws IOException, UnsupportedAudioFileException {
-        AlbumDTO album = objectMapper.readValue(json, AlbumDTO.class);
+        UploadAlbumDTO album = objectMapper.readValue(json, UploadAlbumDTO.class);
         if (album.dateOfPublication() == null) {
             albumService.uploadAlbum(album);
         }
