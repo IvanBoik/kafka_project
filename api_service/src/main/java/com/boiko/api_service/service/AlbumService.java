@@ -21,10 +21,16 @@ public class AlbumService {
     private final RestTemplate restTemplate;
     private final AlbumProducer albumProducer;
 
-    public AlbumDTO[] getTopAlbums(int pageSize, int pageNumber) {
-
+    public AlbumDTO[] getTopAlbumsByLikes(int pageSize, int pageNumber) {
         return restTemplate.getForObject(
-                "/albums?page_size=%s&page_number=%s".formatted(pageSize, pageNumber),
+                "/albums/by_likes?page_size=%s&page_number=%s".formatted(pageSize, pageNumber),
+                AlbumDTO[].class
+        );
+    }
+
+    public AlbumDTO[] getTopAlbumsByAuditions(int pageSize, int pageNumber) {
+        return restTemplate.getForObject(
+                "/albums/by_auditions?page_size=%s&page_number=%s".formatted(pageSize, pageNumber),
                 AlbumDTO[].class
         );
     }
@@ -54,5 +60,12 @@ public class AlbumService {
         String pictureType = picture.getContentType();
         UploadAlbumDTO album = new UploadAlbumDTO(name, songs, ids, pictureData, pictureType, dateOfPublication);
         albumProducer.sendAlbumForUpload(album);
+    }
+
+    public Long getAlbumAuditions(Long albumID) {
+        return restTemplate.getForObject(
+                "/albums/%d/auditions".formatted(albumID),
+                Long.class
+        );
     }
 }

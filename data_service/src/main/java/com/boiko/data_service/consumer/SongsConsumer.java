@@ -17,7 +17,7 @@ public class SongsConsumer {
     private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "songsTopic", groupId = "soundvibe")
-    void songsListener(String json) throws IOException, UnsupportedAudioFileException {
+    public void songsListener(String json) throws IOException, UnsupportedAudioFileException {
         UploadSongDTO song = objectMapper.readValue(json, UploadSongDTO.class);
         if (song.dateOfPublication() == null) {
             songService.uploadSong(song);
@@ -26,5 +26,11 @@ public class SongsConsumer {
             songService.uploadSongAtDate(song);
         }
         System.out.println(song);
+    }
+
+    @KafkaListener(topics = "auditionsTopic", groupId = "soundvibe")
+    public void auditionsListener(String songID) {
+        songService.incrementAuditions(Long.parseLong(songID));
+        System.out.println(songID);
     }
 }

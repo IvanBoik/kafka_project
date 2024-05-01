@@ -4,7 +4,9 @@ import com.boiko.data_service.model.Album;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -16,8 +18,14 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
 
     Optional<Album> findPublishedById(Long id);
 
-    @Query(value = """
-    update Album set auditions=auditions+1 where id=:id
+    @Modifying
+    @Transactional
+    @Query(nativeQuery = true, value = """
+    update albums a
+    set auditions=a.auditions+1
+    from songs_in_albums sia
+    join songs s on s.id = sia.id_song
+    where s.id=?1 and a.id=sia.id_album
     """)
-    void incrementAuditions(Long id);
+    void incrementAuditions(Long songID);
 }

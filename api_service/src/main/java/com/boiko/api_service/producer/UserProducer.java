@@ -1,6 +1,6 @@
 package com.boiko.api_service.producer;
 
-import com.boiko.api_service.dto.UploadSongDTO;
+import com.boiko.api_service.dto.BecomeAuthorRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -9,16 +9,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class SongProducer {
+public class UserProducer {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public void sendSongForUpload(UploadSongDTO songDTO) throws JsonProcessingException {
-        String json = objectMapper.writeValueAsString(songDTO);
-        kafkaTemplate.send("songsTopic", json);
-    }
-
-    public void incrementSongAuditions(Long songID) {
-        kafkaTemplate.send("auditionsTopic", songID.toString());
+    public void becameAuthor(BecomeAuthorRequest request) throws JsonProcessingException {
+        String json = objectMapper.writeValueAsString(request);
+        kafkaTemplate.send("authorsTopic", json);
     }
 }

@@ -41,12 +41,20 @@ public class SongService {
     private final SongMapper songMapper;
     private final Timer timer = new Timer("songTimer");
 
-    public List<SongDTO> getTopSongs(int pageSize, int pageNumber) {
-        Pageable pageParams = PageRequest.of(pageNumber, pageSize, Sort.by("likes").descending());
+    public List<SongDTO> getTopSongsByLikes(int pageSize, int pageNumber) {
+        return getTopSongsBy("likes", pageSize, pageNumber);
+    }
+
+    private List<SongDTO> getTopSongsBy(String sortField, int pageSize, int pageNumber) {
+        Pageable pageParams = PageRequest.of(pageNumber, pageSize, Sort.by(sortField).descending());
         return songRepository
                 .findAllPublished(pageParams)
                 .map(songMapper::modelToDTO)
                 .toList();
+    }
+
+    public List<SongDTO> getTopSongsByAuditions(int pageSize, int pageNumber) {
+        return getTopSongsBy("auditions", pageSize, pageNumber);
     }
 
     public Song uploadSongAtDate(Long[] authorsIDs, MultipartFile audio, MultipartFile picture, LocalDateTime dateOfPublication)
@@ -133,12 +141,7 @@ public class SongService {
     }
 
     private long calculateDuration(MultipartFile file) throws IOException, UnsupportedAudioFileException {
-        InputStream stream = file.getInputStream();
-        InputStream bufferedIn = new BufferedInputStream(stream);
-        AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(bufferedIn);
-        AudioFormat format = audioInputStream.getFormat();
-        long frames = audioInputStream.getFrameLength();
-        return (long) (frames / format.getFrameRate());
+        return calculateDuration(file.getBytes());
     }
 
     private long calculateDuration(byte[] data) throws IOException, UnsupportedAudioFileException {
@@ -230,5 +233,13 @@ public class SongService {
             );
         }
         return songs;
+    }
+
+    public Long getSongAuditions(Long songID) {
+        return findByID(songID).getAuditions();
+    }
+
+    public void incrementAuditions(Long songID) {
+        songRepository.incrementAuditions(songID);
     }
 }

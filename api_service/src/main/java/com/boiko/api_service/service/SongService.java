@@ -18,9 +18,16 @@ public class SongService {
     private final RestTemplate restTemplate;
     private final SongProducer songProducer;
 
-    public SongDTO[] getTopSongs(int pageSize, int pageNumber) {
+    public SongDTO[] getTopSongsByLikes(int pageSize, int pageNumber) {
         return restTemplate.getForObject(
-                "/songs?page_size=%d&page_number=%d".formatted(pageSize, pageNumber),
+                "/songs/by_likes?page_size=%d&page_number=%d".formatted(pageSize, pageNumber),
+                SongDTO[].class
+        );
+    }
+
+    public SongDTO[] getTopSongsByAuditions(int pageSize, int pageNumber) {
+        return restTemplate.getForObject(
+                "/songs/by_auditions?page_size=%d&page_number=%d".formatted(pageSize, pageNumber),
                 SongDTO[].class
         );
     }
@@ -52,5 +59,16 @@ public class SongService {
                 dateOfPublication
         );
         songProducer.sendSongForUpload(songDTO);
+    }
+
+    public void incrementSongAuditions(Long songID) {
+        songProducer.incrementSongAuditions(songID);
+    }
+
+    public Long getSongAuditions(Long songID) {
+        return restTemplate.getForObject(
+                "/songs/%d/auditions".formatted(songID),
+                Long.class
+        );
     }
 }

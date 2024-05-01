@@ -1,4 +1,4 @@
-package com.boiko.data_service.dto;
+package com.boiko.api_service.dto;
 
 import java.util.List;
 

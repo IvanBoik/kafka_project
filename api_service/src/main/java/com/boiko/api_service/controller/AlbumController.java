@@ -56,13 +56,38 @@ public class AlbumController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<?> topAlbums(
+    @GetMapping(value = "/by_likes")
+    public ResponseEntity<?> getTopAlbumsByLikes(
             @RequestParam(value = "page_size", defaultValue = "10") int pageSize,
             @RequestParam("page_number") int pageNumber
     ) {
         try {
-            return ResponseEntity.ok(albumService.getTopAlbums(pageSize, pageNumber));
+            return ResponseEntity.ok(albumService.getTopAlbumsByLikes(pageSize, pageNumber));
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping(value = "/by_auditions")
+    public ResponseEntity<?> getTopAlbumsByAuditions(
+            @RequestParam(value = "page_size", defaultValue = "10") int pageSize,
+            @RequestParam("page_number") int pageNumber
+    ) {
+        try {
+            return ResponseEntity.ok(albumService.getTopAlbumsByAuditions(pageSize, pageNumber));
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{albumID}/auditions")
+    public ResponseEntity<?> getAlbumAuditions(@PathVariable Long albumID) {
+        try {
+            return ResponseEntity.ok(albumService.getAlbumAuditions(albumID));
         }
         catch (RuntimeException e) {
             logger.error(e);

@@ -52,13 +52,50 @@ public class SongController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<?> topSongs(
+    @GetMapping(value = "/by_likes")
+    public ResponseEntity<?> getTopSongsByLikes(
             @RequestParam(value = "page_size", defaultValue = "10") int pageSize,
             @RequestParam("page_number") int pageNumber
     ) {
         try {
-            return ResponseEntity.ok(songService.getTopSongs(pageSize, pageNumber));
+            return ResponseEntity.ok(songService.getTopSongsByLikes(pageSize, pageNumber));
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping(value = "/by_auditions")
+    public ResponseEntity<?> getTopSongsByAuditions(
+            @RequestParam(value = "page_size", defaultValue = "10") int pageSize,
+            @RequestParam("page_number") int pageNumber
+    ) {
+        try {
+            return ResponseEntity.ok(songService.getTopSongsByAuditions(pageSize, pageNumber));
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{songID}/auditions/increment")
+    public ResponseEntity<?> incrementSongAuditions(@PathVariable Long songID) {
+        try {
+            songService.incrementSongAuditions(songID);
+            return ResponseEntity.ok("OK");
+        }
+        catch (RuntimeException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{songID}/auditions")
+    public ResponseEntity<?> getSongAuditions(@PathVariable Long songID) {
+        try {
+            return ResponseEntity.ok(songService.getSongAuditions(songID));
         }
         catch (RuntimeException e) {
             logger.error(e);

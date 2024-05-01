@@ -2,7 +2,9 @@ package com.boiko.data_service.service;
 
 import com.boiko.data_service.dto.BecomeAuthorRequest;
 import com.boiko.data_service.dto.UserDTO;
+import com.boiko.data_service.dto.UserDetailsDTO;
 import com.boiko.data_service.mapper.AuthorLinkMapper;
+import com.boiko.data_service.mapper.UserMapper;
 import com.boiko.data_service.model.*;
 import com.boiko.data_service.repository.AuthorLinkRepository;
 import com.boiko.data_service.repository.AuthorRepository;
@@ -26,6 +28,7 @@ public class UserService {
     private final SongService songService;
     private final AlbumService albumService;
     private final AuthorLinkMapper linkMapper;
+    private final UserMapper userMapper;
 
     public User saveUser(UserDTO userDTO) {
         User user = User.builder()
@@ -39,7 +42,15 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User findUserByID(Long id) {
+    public UserDetailsDTO findUserDTOByID(Long id) {
+        return userMapper.modelToDTO(
+                userRepository
+                    .findById(id)
+                    .orElseThrow(() -> new RuntimeException("User with id = %d doesn't exist".formatted(id)))
+        );
+    }
+
+    private User findUserByID(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User with id = %d doesn't exist".formatted(id)));
     }
@@ -49,16 +60,16 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Author with id = %d doesn't exist".formatted(id)));
     }
 
-    public Author becomeAuthor(Long id, BecomeAuthorRequest request) {
-        User user = findUserByID(id);
+    public Author becomeAuthor(BecomeAuthorRequest request) {
+        User user = findUserByID(request.userID());
         List<AuthorLink> links = new ArrayList<>(request.links()
                 .stream()
                 .map(linkMapper::dtoToModel)
-                .peek(x -> x.setAuthorID(id))
+                .peek(x -> x.setAuthorID(request.userID()))
                 .toList());
 
         Author author = Author.builder()
-                .id(id)
+                .id(request.userID())
                 .biography(request.biography())
                 .build();
         author = authorRepository.save(author);

@@ -1,7 +1,10 @@
-package com.boiko.data_service.controller;
+package com.boiko.api_service.controller;
 
-import com.boiko.data_service.dto.UserDTO;
-import com.boiko.data_service.service.UserService;
+
+import com.boiko.api_service.dto.BecomeAuthorRequest;
+import com.boiko.api_service.dto.UserDTO;
+import com.boiko.api_service.service.UserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +21,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<?> findByID(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(userService.findUserDTOByID(id));
+            return ResponseEntity.ok(userService.findUserByID(id));
         }
         catch (RuntimeException e) {
             logger.error(e.getMessage());
@@ -39,11 +42,8 @@ public class UserController {
         }
     }
 
-    @GetMapping("/login")
-    public ResponseEntity<?> logIn(
-            @RequestParam("email") String email,
-            @RequestParam("password") String password
-    ) {
+    @PostMapping("/login")
+    public ResponseEntity<?> logIn(@RequestParam String email, @RequestParam String password) {
         try {
             return ResponseEntity.ok(userService.logIn(email, password));
         }
@@ -53,11 +53,20 @@ public class UserController {
         }
     }
 
+    @PostMapping("/become_author")
+    public ResponseEntity<?> becomeAuthor(@RequestBody BecomeAuthorRequest request) {
+        try {
+            userService.becomeAuthor(request);
+            return ResponseEntity.ok("OK");
+        }
+        catch (JsonProcessingException e) {
+            logger.error(e);
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PutMapping("/like/song")
-    public ResponseEntity<?> toggleLikeSong(
-            @RequestParam("userID") Long userID,
-            @RequestParam("songID") Long songID
-    ) {
+    public ResponseEntity<?> toggleLikeSong(@RequestParam Long userID, @RequestParam Long songID) {
         try {
             return ResponseEntity.ok(userService.toggleLikeSong(userID, songID));
         }
@@ -68,10 +77,7 @@ public class UserController {
     }
 
     @PutMapping("/like/album")
-    public ResponseEntity<?> toggleLikeAlbum(
-            @RequestParam("userID") Long userID,
-            @RequestParam("albumID") Long albumID
-    ) {
+    public ResponseEntity<?> toggleLikeAlbum(@RequestParam Long userID, @RequestParam Long albumID) {
         try {
             return ResponseEntity.ok(userService.toggleLikeAlbum(userID, albumID));
         }
@@ -82,10 +88,7 @@ public class UserController {
     }
 
     @PutMapping("/like/author")
-    public ResponseEntity<?> toggleLikeAuthor(
-            @RequestParam("userID") Long userID,
-            @RequestParam("authorID") Long authorID
-    ) {
+    public ResponseEntity<?> toggleLikeAuthor(@RequestParam Long userID, @RequestParam Long authorID) {
         try {
             return ResponseEntity.ok(userService.toggleLikeAuthor(userID, authorID));
         }

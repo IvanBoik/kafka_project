@@ -38,8 +38,16 @@ public class AlbumService {
     private final AlbumMapper albumMapper;
     private final Timer timer = new Timer("albumTimer");
 
-    public List<AlbumDTO> getTopAlbums(int pageSize, int pageNumber) {
+    public List<AlbumDTO> getTopAlbumsByLikes(int pageSize, int pageNumber) {
         Pageable pageParams = PageRequest.of(pageNumber, pageSize, Sort.by("likes").descending());
+        return albumRepository
+                .findAllPublished(pageParams)
+                .map(albumMapper::modelToDTO)
+                .toList();
+    }
+
+    public List<AlbumDTO> getTopAlbumsByAuditions(int pageSize, int pageNumber) {
+        Pageable pageParams = PageRequest.of(pageNumber, pageSize, Sort.by("auditions").descending());
         return albumRepository
                 .findAllPublished(pageParams)
                 .map(albumMapper::modelToDTO)
@@ -162,5 +170,13 @@ public class AlbumService {
         Album album = saveAlbum(authors, albumDTO.name(), songs, albumDTO.dateOfPublication());
 
         makeTask(album, albumDTO.dateOfPublication());
+    }
+
+    public Long getAlbumAuditions(Long albumID) {
+        return findByID(albumID).getAuditions();
+    }
+
+    public void incrementAuditions(Long songID) {
+        albumRepository.incrementAuditions(songID);
     }
 }

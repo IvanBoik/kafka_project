@@ -4,7 +4,9 @@ import com.boiko.data_service.model.Song;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -16,6 +18,8 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 
     Optional<Song> findPublishedById(Long id);
 
+    @Modifying
+    @Transactional
     @Query(value = """
     update Song set auditions=auditions+1 where id=:id
     """)
