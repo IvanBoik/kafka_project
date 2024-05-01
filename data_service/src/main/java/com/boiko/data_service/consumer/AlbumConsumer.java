@@ -29,7 +29,7 @@ public class AlbumConsumer {
         System.out.println(album);
     }
 
-    @KafkaListener(topics = "auditionsTopic", groupId = "soundvibe")
+    @KafkaListener(topics = "auditionsTopic", groupId = "soundvibeAlbumAuditions")
     public void auditionsListener(String songID) {
         albumService.incrementAuditions(Long.parseLong(songID));
         System.out.println("AlbumService: " + songID);

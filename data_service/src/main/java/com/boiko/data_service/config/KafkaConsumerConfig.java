@@ -26,7 +26,6 @@ public class KafkaConsumerConfig {
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "soundvibe");
 
         return new DefaultKafkaConsumerFactory<>(configProps, new StringDeserializer(), new StringDeserializer());
     }

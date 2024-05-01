@@ -51,7 +51,7 @@ public class KafkaConfig {
     public NewTopic auditionsTopic() {
         return TopicBuilder
                 .name("auditionsTopic")
-                .partitions(2)
+                .partitions(1)
                 .build();
     }
 }
