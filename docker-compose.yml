@@ -1,0 +1,77 @@
+version: '3.8'
+    
+services:
+  api-service:
+    build:
+      context: api_service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - zookeeper
+      - kafka
+      - postgres
+    env_file:
+      - api_service/.env
+    networks:
+      - db-network
+      - api-network
+
+  data-service:
+    build:
+      context: data_service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      - zookeeper
+      - kafka
+      - postgres
+    env_file:
+      - data_service/.env
+    networks:
+      - db-network
+      - api-network
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - postgres.env
+    volumes:
+      - ./infrastructure/db/create_db.sql:/docker-entrypoint-initdb.d/create_db.sql
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - db-network
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - db-network
+
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    env_file:
+      - kafka.env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zookeeper
+    networks:
+      - db-network
+
+volumes:
+  db-data:
+
+networks:
+  db-network:
+    driver: bridge
+    internal: true
+  api-network:
+    driver: bridge

@@ -12,7 +12,7 @@ public class AppConfig {
     @Bean
     public RestTemplate restTemplate() {
         return new RestTemplateBuilder()
-                .rootUri("http://localhost:8081/api/v1")
+                .rootUri("http://data-service:8081/api/v1")
                 .build();
     }
 
