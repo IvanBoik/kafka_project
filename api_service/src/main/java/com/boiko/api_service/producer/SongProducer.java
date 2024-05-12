@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class SongProducer {
@@ -15,10 +17,12 @@ public class SongProducer {
 
     public void sendSongForUpload(UploadSongDTO songDTO) throws JsonProcessingException {
         String json = objectMapper.writeValueAsString(songDTO);
-        kafkaTemplate.send("songsTopic", json);
+        String key = UUID.randomUUID().toString();
+        kafkaTemplate.send("songsTopic", key, json);
     }
 
     public void incrementSongAuditions(Long songID) {
-        kafkaTemplate.send("auditionsTopic", songID.toString());
+        String key = UUID.randomUUID().toString();
+        kafkaTemplate.send("auditionsTopic", key, songID.toString());
     }
 }

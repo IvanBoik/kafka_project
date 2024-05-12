@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class UserProducer {
@@ -15,6 +17,7 @@ public class UserProducer {
 
     public void becameAuthor(BecomeAuthorRequest request) throws JsonProcessingException {
         String json = objectMapper.writeValueAsString(request);
-        kafkaTemplate.send("authorsTopic", json);
+        String key = UUID.randomUUID().toString();
+        kafkaTemplate.send("authorsTopic", key, json);
     }
 }

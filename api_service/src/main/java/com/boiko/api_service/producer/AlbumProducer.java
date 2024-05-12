@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class AlbumProducer {
@@ -15,6 +17,7 @@ public class AlbumProducer {
 
     public void sendAlbumForUpload(UploadAlbumDTO albumDTO) throws JsonProcessingException {
         String json = objectMapper.writeValueAsString(albumDTO);
-        kafkaTemplate.send("albumsTopic", json);
+        String key = UUID.randomUUID().toString();
+        kafkaTemplate.send("albumsTopic", key, json);
     }
 }
